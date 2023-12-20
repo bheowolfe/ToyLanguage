@@ -1,0 +1,33 @@
+package ToyLanguage;
+
+import java.io.IOException;
+
+public class ToyLanguage {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		testParser();
+	}
+
+	public static void testLexer() throws IOException {
+		System.out.println("Start Lexer Test");
+		Lexer lex = new Lexer();
+		try {
+			System.out.println(lex.scan());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void testParser() {
+		System.out.println("Start Parser Test");
+		Parser parse = new Parser();
+		try {
+			parse.Program();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+}
