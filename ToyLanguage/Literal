@@ -1,0 +1,12 @@
+package ToyLanguage;
+
+public class Literal extends Token {
+
+	public final int value;
+
+	public Literal(int v) {
+		super(Tag.NUM);
+		value = v;
+	}
+
+}
