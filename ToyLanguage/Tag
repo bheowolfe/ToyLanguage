@@ -1,0 +1,8 @@
+package ToyLanguage;
+
+public class Tag {
+
+	public final static int NUM = 1, ID = 2, PLUS = 3, MINUS = 4, MULT = 5, EQUAL = 6, OPEN = 7, CLOSE = 8, SEMI = 9,
+			END = 10;
+
+}
