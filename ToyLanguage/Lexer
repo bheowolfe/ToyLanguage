@@ -1,0 +1,119 @@
+package ToyLanguage;
+
+import java.io.*;
+import java.util.*;
+
+public class Lexer {
+
+	public int line = 1;
+	private char peek = ' ';
+	private BufferedReader br;
+	private Hashtable<String, Identifier> IDs = new Hashtable();
+
+	void reserve(Identifier t) {
+		IDs.put(t.lexeme, t);
+	}
+
+	// gets only the id and values from IDs
+	public void getVal() {
+		// probably faster methods then iterating over HashMap
+		// but I just want to demonstrate the correct values
+		// are stored
+		IDs.forEach((id, val) -> {
+			if (val.init) {
+				System.out.println(id + " = " + val.val);
+			}
+		});
+	}
+
+	public Lexer() throws IOException {
+		// establishing ids for all the symbols
+		reserve(new Identifier(Tag.PLUS, "+"));
+		reserve(new Identifier(Tag.MINUS, "-"));
+		reserve(new Identifier(Tag.MULT, "*"));
+		reserve(new Identifier(Tag.EQUAL, "="));
+		reserve(new Identifier(Tag.OPEN, "("));
+		reserve(new Identifier(Tag.CLOSE, ")"));
+		reserve(new Identifier(Tag.SEMI, ";"));
+		reserve(new Identifier(Tag.END, "\r"));
+
+		// get file to read
+		System.out.print("Input file name: ");
+		BufferedReader instr = new BufferedReader(new InputStreamReader(System.in));
+		String fileName = instr.readLine();
+
+		File file = new File(fileName);
+		br = new BufferedReader(new FileReader(file));
+	}
+
+	public Token scan() throws IOException {
+		// move past blank space and new lines
+		// also check for end of txt file
+		// which I guess is always int 65535
+		// I probably can do better
+		for (;; peek = (char) br.read()) {
+			if (peek == ' ' || peek == '\t')
+				continue;
+			else if (peek == '\n' || peek == '\r')
+				line = line + 1;
+			else if ((int) peek == 65535) {
+				System.out.println("ending peek");
+				return IDs.get("\r");
+			} else
+				break;
+		}
+
+		// checks if the character is a digit
+		if (Character.isDigit(peek)) {
+			int v = 0;
+			// checks if that digit is a 0
+			// I know what your thinking
+			// this doesn't catch if its a 0 at the start of a digit
+			// but by treating the next digit as a new number
+			// it creates a syntax error anyway
+			if (Character.compare(peek, '0') == 0) {
+				peek = (char) br.read();
+				return new Literal(v);
+			}
+
+			do {
+				v = 10 * v + Character.digit(peek, 10);
+				peek = (char) br.read();
+			} while (Character.isDigit(peek));
+			return new Literal(v);
+		}
+
+		// checks if character is a letter and then makes ID
+		// with following letters and numbers
+		if (Character.isLetter(peek)) {
+			StringBuffer b = new StringBuffer();
+			do {
+				b.append(peek);
+				peek = (char) br.read();
+			} while (Character.isLetterOrDigit(peek) || peek == '_');
+			String s = b.toString();
+			Identifier w = (Identifier) IDs.get(s);
+			if (w != null)
+				return w;
+			w = new Identifier(Tag.ID, s);
+			IDs.put(s, w);
+			return w;
+		}
+
+		// checks if character is one of symbols and gives
+		// back the appropriate Token
+		Identifier s = (Identifier) IDs.get(String.valueOf(peek));
+		if (s != null) {
+			peek = (char) br.read();
+			return s;
+		}
+
+		// if we get here then theres some kinda syntax error
+		// the parser will deal with the syntax error
+		// and a token needs to be returned anyway
+		Token t = new Token(0);
+		peek = ' ';
+		return t;
+	}
+
+}
