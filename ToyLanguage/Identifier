@@ -1,0 +1,14 @@
+package ToyLanguage;
+
+public class Identifier extends Token {
+
+	public final String lexeme;
+	public int val;
+	public boolean init = false;
+
+	public Identifier(int t, String s) {
+		super(t);
+		lexeme = new String(s);
+	}
+
+}
