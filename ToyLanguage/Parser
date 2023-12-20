@@ -1,0 +1,142 @@
+package ToyLanguage;
+
+import java.io.IOException;
+import java.util.*;
+
+public class Parser {
+
+	Lexer lex;
+	Token token;
+	int tag = 0;
+
+	// sets value of id and makes it an initiated value
+	void assign(Identifier id, int val) {
+		id.val = val;
+		id.init = true;
+	}
+
+	// gets next token in file and gets tag of said token
+	public void update() throws IOException {
+		token = lex.scan();
+		tag = token.tag;
+	}
+
+	// starts program by getting a lexer and then moving on to
+	// Assignment
+	public void Program() throws IOException {
+		lex = new Lexer();
+		update();
+		Assignment();
+		lex.getVal();
+	}
+
+	// assigns values to IDs and then checks if anymore
+	// assignments need to be done
+	public void Assignment() throws IOException {
+		if (tag != Tag.ID) {
+			error();
+		}
+
+		Identifier id = (Identifier) token;
+		update();
+		if (tag != Tag.EQUAL) {
+			error();
+		}
+		update();
+		int result = Exp();
+		assign(id, result);
+		if (tag == Tag.SEMI) {
+			update();
+			if (tag != Tag.END) {
+				Assignment();
+			}
+		} else {
+			error();
+		}
+	}
+
+	// for when you know there has to be an Exp here
+	public int Exp() throws IOException {
+		return ExpII(Term());
+	}
+
+	// for when there could be an Exp here
+	// adds or subtracts value of the previous term
+	// from the future ones
+	public int ExpII(int t1) throws IOException {
+		switch (tag) {
+		case Tag.PLUS:
+			update();
+			return t1 + ExpII(Term());
+		case Tag.MINUS:
+			update();
+			return t1 - ExpII(Term());
+		}
+		return t1;
+	}
+
+	// for when you know there has to be an Term here
+	public int Term() throws IOException {
+		return TermII(Fact());
+	}
+
+	// for when there could be an Term here
+	// multiply value of the previous fact
+	// with the future ones
+	public int TermII(int f1) throws IOException {
+		// System.out.println("TermII Start");
+		switch (tag) {
+		case Tag.MULT:
+			update();
+			return f1 * TermII(Fact());
+		}
+		return f1;
+	}
+
+	//
+	public int Fact() throws IOException {
+		switch (tag) {
+		// if its a number Fact returns the number
+		case Tag.NUM:
+			Literal token2 = (Literal) token;
+			update();
+			return token2.value;
+		// if its an ID Fact checks if ID is initiated value
+		// then returns value of the ID
+		case Tag.ID:
+			Identifier token3 = (Identifier) token;
+			if (!token3.init) {
+				throw new RuntimeException("Uninitiated Identifier");
+			}
+			update();
+			return (int) token3.val;
+		// basically does nothing
+		case Tag.PLUS:
+			update();
+			return Fact();
+		// makes the value the opposite
+		case Tag.MINUS:
+			update();
+			return Fact() * -1;
+		// checks if following ( theres an Exp followed by an )
+		case Tag.OPEN:
+			update();
+			int r = Exp();
+			if (tag == Tag.CLOSE) {
+				update();
+			} else {
+				error();
+			}
+			return r;
+		default:
+			error();
+			return 0;
+		}
+	}
+
+	// when the syntax isn't correct
+	static void error() {
+		throw new RuntimeException("syntax error");
+	}
+
+}
